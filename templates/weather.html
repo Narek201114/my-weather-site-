@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Եղանակի Տեսություն</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        .weather-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 35px;
+            width: 380px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: #fff;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+        .search-input::placeholder {
+            color: #ddd;
+        }
+        .search-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: #e94560;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .search-btn:hover {
+            background: #ff647c;
+        }
+        .location {
+            font-size: 2.2rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .country {
+            font-size: 1.1rem;
+            color: #bfa3ff;
+            margin-bottom: 20px;
+        }
+        .temperature {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 15px 0;
+            display: inline-block;
+            position: relative;
+        }
+        .unit {
+            font-size: 1.8rem;
+            position: absolute;
+            top: 10px;
+            right: -30px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 20px;
+        }
+        .info-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .info-label {
+            font-size: 0.85rem;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .error-msg {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="weather-card">
+        <form class="search-form" action="/weather" method="POST">
+            <input type="text" name="city" class="search-input" placeholder="Մուտքագրեք քաղաքը (անգլերեն)..." required>
+            <button type="submit" class="search-btn">Որոնել</button>
+        </form>
+
+        {% if error %}
+            <div class="error-msg">{{ error }}</div>
+        {% endif %}
+
+        <div class="location">{{ city_name }}</div>
+        <div class="country">{{ country_name }}</div>
+        
+        <div>
+            <div class="temperature">
+                {{ temp }}<span class="unit">°C</span>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Քամու արագություն</div>
+                <div class="info-value">{{ wind_speed }} կմ/ժ</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Եղանակի կոդ</div>
+                <div class="info-value">#{{ weather_code }}</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
