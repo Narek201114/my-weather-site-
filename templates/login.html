@@ -2,25 +2,18 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Մուտք | Եղանակի կայք</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        form { margin-top: 20px; }
-        input { padding: 10px; margin: 5px; }
-        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; }
-    </style>
+    <title>Մուտք</title>
 </head>
 <body>
-    <h1>Մուտք</h1>
+    <h1>Մուտքի էջ</h1>
     <form action="/login" method="POST">
-        <input type="text" placeholder="Օգտանուն" name="username" required>
+        <input type="text" name="username" placeholder="Օգտանուն" required>
         <br>
-        <input type="password" placeholder="Գաղտնաբառ" name="password" required>
-        <br><br>
+        <input type="password" name="password" placeholder="Գաղտնաբառ" required>
+        <br>
         <button type="submit">Մուտք</button>
     </form>
     <br>
-    <a href="/">Վերադառնալ գլխավոր էջ</a>
+    <a href="/">Վերադառնալ գլխավոր</a>
 </body>
 </html>
