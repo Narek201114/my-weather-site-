@@ -40,20 +40,47 @@ def translate_weather_code(code):
     return weather_mapping.get(code, "🔮 Անհայտ եղանակ")
 
 def get_coordinates(city_name):
-    # ՍՏՈՒԳՈՒՄ. Եթե տեքստի մեջ կա ստորակետ, ուրեմն քարտեզից եկած կոորդինատ է
+    # Եթե կոդը ստացել է կոորդինատներ (ստորակետով թվեր)
     if "," in city_name:
         try:
             lat, lon = city_name.split(",")
+            lat = lat.strip()
+            lon = lon.strip()
+            
+            # Դիմում ենք API-ին՝ կոորդինատով անունը գտնելու համար (Reverse Geocoding)
+            reverse_url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&accept-language=hy,en"
+            headers = {'User-Agent': 'MyWeatherApp/1.0'} # Պարտադիր է Nominatim-ի համար
+            
+            response = requests.get(reverse_url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                geo_data = response.json()
+                address = geo_data.get("address", {})
+                
+                # Փորձում ենք հերթով գտնել գյուղի, քաղաքի կամ շրջանի անունը
+                place_name = address.get("village") or address.get("town") or address.get("city") or address.get("suburb") or address.get("county")
+                country = address.get("country", "Unknown")
+                
+                if place_name:
+                    return {
+                        "lat": float(lat),
+                        "lon": float(lon),
+                        "name": f"📍 {place_name}",
+                        "country": country
+                    }
+            
+            # Եթե անունը չգտնվեց, թողնում ենք կոորդինատները
             return {
-                "lat": float(lat.strip()),
-                "lon": float(lon.strip()),
-                "name": f"📍 Կետ քարտեզի վրա ({lat.strip()}, {lon.strip()})",
+                "lat": float(lat),
+                "lon": float(lon),
+                "name": f"📍 Կետ քարտեզի վրա ({lat}, {lon})",
                 "country": "Ընտրված վայր"
             }
-        except Exception:
+        except Exception as e:
+            print(f"Reverse geocoding error: {e}")
             return None
 
-    # Եթե սովորական տեքստ է, փնտրում ենք ըստ անունի
+    # Եթե սովորական տեքստ է գրվել փնտրման դաշտում
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=5&language=en&format=json"
     try:
         response = requests.get(geo_url, timeout=5)
