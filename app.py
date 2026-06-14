@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_secret_key_2026')
 
-# OpenWeather API-ի հուսալի բանալին
+# OpenWeather API-ի բանալին
 API_KEY = 'b7376e7399b3986a7ffc33eb6c34a6ef'
 
 @app.route('/')
@@ -20,7 +20,7 @@ def login():
 
 @app.route('/weather', methods=['GET', 'POST'])
 def weather():
-    # Սկզբնական արժեքներ էջի առաջին բացման համար (որպեսզի սխալ չտա)
+    # Սկզբնական լռելյայն արժեքներ էջի առաջին բացման համար
     city_name = "Ընտրեք քաղաք"
     temp = "--"
     wind_speed = "0"
@@ -32,7 +32,7 @@ def weather():
         search_query = request.form.get('city', '').strip()
         
         if search_query:
-            # 1. Ստուգում ենք՝ արդյո՞ք հարցումը եկել է քարտեզից (կոորդինատներ լատինատառ ստորակետով)
+            # 1. Եթե հարցումը եկել է քարտեզից (կոորդինատներ են)
             if ',' in search_query:
                 try:
                     lat, lon = search_query.split(',')
@@ -41,7 +41,7 @@ def weather():
                 except ValueError:
                     error = "Կոորդինատների սխալ ձևաչափ։"
             else:
-                # 2. Սովորական որոնում քաղաքի անունով
+                # 2. Եթե հարցումը սովորական տեքստային որոնում է
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={search_query}&appid={API_KEY}&units=metric&lang=am"
                 forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={search_query}&appid={API_KEY}&units=metric&lang=am"
 
@@ -52,10 +52,12 @@ def weather():
                     if res.status_code == 200:
                         data = res.json()
                         
-                        # Անկախ նրանից սեղմել ենք քարտեզին թե գրել ենք՝ վերցնում ենք բնակավայրի իրական անունը
-                        city_name = data.get('name', '').strip()
-                        if not city_name or city_name == "":
-                            city_name = "Անհայտ բնակավայր"
+                        # Ֆիքսում ենք միայն բնակավայրի անունը, որը տալիս է API-ն
+                        api_city_name = data.get('name', '').strip()
+                        if api_city_name:
+                            city_name = api_city_name
+                        else:
+                            city_name = "Հայտնաբերված բնակավայր"
 
                         temp = f"{round(data.get('main', {}).get('temp', 0))}"
                         wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}" # մ/վ -> կմ/ժ
@@ -65,7 +67,6 @@ def weather():
                         f_res = requests.get(forecast_url, timeout=10)
                         if f_res.status_code == 200:
                             f_data = f_res.json()
-                            # Քանի որ API-ն տալիս է տվյալներ 3 ժամը մեկ, վերցնում ենք օրական 1 նմուշ (ամեն 8-րդ տողը)
                             for item in f_data.get('list', [])[::8]:
                                 forecast.append({
                                     'date': item.get('dt_txt', '').split(' ')[0],
