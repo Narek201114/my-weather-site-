@@ -56,7 +56,8 @@
         <h1>🌤️ Եղանակի Տեսություն</h1>
         <div class="search-area">
             <form class="search-form" id="searchForm" method="POST" action="/weather">
-                <input type="text" id="cityInput" name="city" placeholder="Գրեք քաղաքի անունը..." required>
+                <input type="text" id="cityInput" name="city" placeholder="Գրեք քաղաքի անունը..." autocomplete="off" list="cities" required>
+                <datalist id="cities"></datalist>
                 <button type="submit">Փնտրել</button>
             </form>
             <button class="geo-btn" id="geoBtn" title="Իմ տեղադրությունը">🎯</button>
@@ -146,6 +147,37 @@
             body.style.background = "linear-gradient(135deg, #dcdde1, #718093)";
         }
     }
+
+    // 🔍 AUTOCOMPLETE (ԱՎՏՈՄԱՏ ՀՈՒՇՈՒՄՆԵՐԻ) ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ
+    const cityInput = document.getElementById('cityInput');
+    const citiesDatalist = document.getElementById('cities');
+
+    cityInput.addEventListener('input', async function() {
+        const query = this.value.trim();
+        if (query.length < 3) {
+            citiesDatalist.innerHTML = ""; // 3 տառից պակաս դեպքում չփնտրել
+            return;
+        }
+
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`);
+            const data = await res.json();
+            
+            citiesDatalist.innerHTML = ""; // Մաքրել հին ցուցակը
+            
+            if (data.results) {
+                data.results.forEach(city => {
+                    const option = document.createElement('option');
+                    const country = city.country ? `, ${city.country}` : "";
+                    const admin1 = city.admin1 ? ` (${city.admin1})` : "";
+                    option.value = `${city.name}${country}${admin1}`;
+                    citiesDatalist.appendChild(option);
+                });
+            }
+        } catch (err) {
+            console.error("Geocoding error:", err);
+        }
+    });
 
     window.onload = function() {
         updateBackground();
