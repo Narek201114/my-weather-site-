@@ -22,7 +22,7 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
-        # Քո ճիշտ տվյալները՝ հաշվի առնելով Narek2011. գաղտնաբառը
+        # Քո ճիշտ տվյալները
         if username == "Narek" and password == "Narek2011.":
             session['logged_in'] = True
             session['username'] = username
@@ -57,6 +57,7 @@ def weather():
             url = None
             forecast_url = None
             
+            # Եթե հարցումը քարտեզի կոորդինատներ են (lat,lon)
             if ',' in search_query:
                 try:
                     parts = search_query.split(',')
@@ -68,17 +69,18 @@ def weather():
                 except Exception:
                     error = "Բնակավայրը չգտնվեց"
             else:
+                # Տեքստային որոնում քաղաքի անունով
                 safe_city = urllib.parse.quote(search_query)
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
                 forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
 
             if url and not error:
                 try:
+                    # Ընթացիկ եղանակի հարցում
                     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
                     with urllib.request.urlopen(req, timeout=10) as response:
                         if response.status == 200:
                             data = json.loads(response.read().decode())
-                            
                             city_name = data.get('name', '').strip()
                             if not city_name:
                                 city_name = "Հայտնաբերված վայր"
@@ -86,21 +88,25 @@ def weather():
                             temp = f"{round(data.get('main', {}).get('temp', 0))}"
                             wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}"
                             weather_text = data.get('weather', [{}])[0].get('description', '').capitalize()
-                            
-                            f_req = urllib.request.Request(forecast_url, headers={'User-Agent': 'Mozilla/5.0'})
-                            with urllib.request.urlopen(f_req, timeout=10) as f_response:
-                                if f_response.status == 200:
-                                    f_data = json.loads(f_response.read().decode())
-                                    for item in f_data.get('list', [])[::8]:
-                                        forecast.append({
-                                            'date': item.get('dt_txt', '').split(' ')[0],
-                                            'condition': item.get('weather', [{}])[0].get('description', '').capitalize(),
-                                            'max_temp': round(item.get('main', {}).get('temp_max', 0)),
-                                            'min_temp': round(item.get('main', {}).get('temp_min', 0))
-                                        })
                         else:
                             error = "Բնակավայրը չգտնվեց"
+                    
+                    # 5 օրվա կանխատեսման հարցում
+                    if not error:
+                        f_req = urllib.request.Request(forecast_url, headers={'User-Agent': 'Mozilla/5.0'})
+                        with urllib.request.urlopen(f_req, timeout=10) as f_response:
+                            if f_response.status == 200:
+                                f_data = json.loads(f_response.read().decode())
+                                # Վերցնում ենք ամեն օրվա համար 1 տվյալ (8 հարցումը = 24 ժամ)
+                                for item in f_data.get('list', [])[::8]:
+                                    forecast.append({
+                                        'date': item.get('dt_txt', '').split(' ')[0],
+                                        'condition': item.get('weather', [{}])[0].get('description', '').capitalize(),
+                                        'max_temp': round(item.get('main', {}).get('temp_max', 0)),
+                                        'min_temp': round(item.get('main', {}).get('temp_min', 0))
+                                    })
                 except Exception:
+                    # Եթե API-ն սխալ տա կամ կետը օվկիանոսում լինի, կայքը չի կոտրվի
                     error = "Բնակավայրը չգտնվեց"
 
     return render_template(
