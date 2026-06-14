@@ -2,12 +2,38 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>Եղանակի տեսություն</title>
+    <title>Եղանակի տեսություն և Քարտեզ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #map { height: 400px; width: 80%; margin: 20px auto; border: 2px solid #333; }
+        .weather-info { margin-top: 20px; padding: 15px; border: 1px solid #ddd; display: inline-block; }
+    </style>
 </head>
 <body>
     <h1>Եղանակի տեսություն</h1>
-    <p>Այստեղ կերևա ընթացիկ եղանակը</p>
-    <br>
-    <a href="/">Գլխավոր</a>
+    
+    <div id="map"></div>
+
+    <div class="weather-info">
+        <h3>Կանխատեսումներ</h3>
+        <p>Այստեղ կերևան քո եղանակի տվյալները...</p>
+    </div>
+    
+    <br><br>
+    <a href="/">Վերադառնալ գլխավոր</a>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Քարտեզի կարգավորումներ
+        var map = L.map('map').setView([40.18, 44.51], 10); // Երևանի կոորդինատները
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([40.18, 44.51]).addTo(map)
+            .bindPopup('Երևան, Հայաստան')
+            .openPopup();
+    </script>
 </body>
 </html>
