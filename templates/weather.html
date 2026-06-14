@@ -2,38 +2,104 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>Եղանակի տեսություն և Քարտեզ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Եղանակի Տեսություն և Քարտեզ</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #map { height: 400px; width: 80%; margin: 20px auto; border: 2px solid #333; }
-        .weather-info { margin-top: 20px; padding: 15px; border: 1px solid #ddd; display: inline-block; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f6fa; margin: 0; padding: 20px; text-align: center; }
+        h1 { color: #2f3640; }
+        .search-box { margin-bottom: 20px; }
+        input[type="text"] { padding: 10px; width: 250px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
+        button { padding: 10px 15px; background-color: #4cd137; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #44bd32; }
+        #map { height: 450px; width: 85%; margin: 20px auto; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 2px solid #dcdde1; }
+        .weather-display { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 15px; min-width: 300px; }
+        .weather-display h3 { margin: 0 0 10px 0; color: #2f3640; }
+        .info-row { font-size: 18px; color: #718093; margin: 5px 0; }
+        .logout-btn { display: inline-block; margin-top: 25px; color: #e84118; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Եղանակի տեսություն</h1>
+
+    <h1>Աշխարհի Եղանակը Քարտեզի Վրա</h1>
     
+    <div class="search-box">
+        <input type="text" id="cityInput" placeholder="Գրեք քաղաքի անունը...">
+        <button onclick="searchCity()">Որոնել</button>
+    </div>
+
     <div id="map"></div>
 
-    <div class="weather-info">
-        <h3>Կանխատեսումներ</h3>
-        <p>Այստեղ կերևան քո եղանակի տվյալները...</p>
+    <div class="weather-display" id="weatherDisplay">
+        <h3>Ընտրեք վայր քարտեզից</h3>
+        <p class="info-row">Սեղմեք քարտեզի ցանկացած կետի վրա՝ եղանակը տեսնելու համար։</p>
     </div>
-    
-    <br><br>
-    <a href="/">Վերադառնալ գլխավոր</a>
+
+    <br>
+    <a href="/" class="logout-btn">Դուրս Գալ</a>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Քարտեզի կարգավորումներ
-        var map = L.map('map').setView([40.18, 44.51], 10); // Երևանի կոորդինատները
+        // Անվճար API Key եղանակի համար
+        const apiKey = 'b7376e7399b3986a7ffc33eb6c34a6ef'; 
+
+        // Ստեղծում ենք քարտեզը (Կենտրոնը՝ Հայաստան)
+        var map = L.map('map').setView([40.18, 44.51], 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        L.marker([40.18, 44.51]).addTo(map)
-            .bindPopup('Երևան, Հայաստան')
-            .openPopup();
+        var marker;
+
+        // Ֆունկցիա՝ API-ից եղանակ վերցնելու համար
+        function getWeather(lat, lon, cityName = '') {
+            let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=am`;
+            
+            if(cityName) {
+                url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=am`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.cod === 200) {
+                        const temp = Math.round(data.main.temp);
+                        const desc = data.weather[0].description;
+                        const humidity = data.main.humidity;
+                        const name = data.name;
+
+                        // Թարմացնում ենք էկրանի տեքստը
+                        document.getElementById('weatherDisplay').innerHTML = `
+                            <h3>${name}</h3>
+                            <div class="info-row"><b>Ջերմաստիճան:</b> ${temp}°C</div>
+                            <div class="info-row"><b>Վիճակ:</b> ${desc}</div>
+                            <div class="info-row"><b>Խոնավություն:</b> ${humidity}%</div>
+                        `;
+
+                        // Տեղափոխում ենք մարկերը
+                        const newLat = data.coord.lat;
+                        const newLon = data.coord.lon;
+                        
+                        if (marker) { map.removeLayer(marker); }
+                        marker = L.marker([newLat, newLon]).addTo(map).bindPopup(`<b>${name}</b>: ${temp}°C`).openPopup();
+                        if(cityName) { map.setView([newLat, newLon], 10); }
+                    } else {
+                        alert("Քաղաքը չգտնվեց:");
+                    }
+                })
+                .catch(err => console.error("Սխալ API հարցման ժամանակ:", err));
+        }
+
+        // Քարտեզի վրա սեղմելու իրադարձություն
+        map.on('click', function(e) {
+            getWeather(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Որոնման ֆունկցիա
+        function searchCity() {
+            const city = document.getElementById('cityInput').value;
+            if(city) { getWeather(0, 0, city); }
+        }
     </script>
 </body>
 </html>
