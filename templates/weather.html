@@ -82,6 +82,7 @@
             margin-bottom: 20px;
             text-align: center;
             border: 1px solid #fed7d7;
+            font-weight: 600;
         }
         .forecast-section { margin-top: 35px; }
         .forecast-title {
@@ -117,7 +118,7 @@
 
 <div class="container">
     <div class="card">
-        <h3 style="margin-top:0; color:#2d3748; font-size:16px;">🗺️ Սեղմիր քարտեզի վրա՝ եղանակը տեսնելու համար</h3>
+        <h3 style="margin-top:0; color:#2d3748; font-size:16px;">🗺️ Սեղմիր քարտեզի ցանկացած կետի վրա՝ եղանակը տեսնելու համար</h3>
         <div id="map"></div>
     </div>
 
@@ -143,10 +144,11 @@
             <h3 class="city-title">🏢 {{ city_name }}</h3>
             
             <div class="weather-icon">
-                {% if 'անձրև' in weather_text.lower() or 'անձրեւ' in weather_text.lower() %}🌧️
-                {% elif 'ամպ' in weather_text.lower() %}☁️
-                {% elif 'պարզ' in weather_text.lower() or 'արև' in weather_text.lower() %}☀️
+                {% if 'անձրև' in weather_text.lower() or 'անձրեւ' in weather_text.lower() or 'թույլ անձրև' in weather_text.lower() %}🌧️
+                {% elif 'ամպ' in weather_text.lower() or 'ամպամած' in weather_text.lower() %}☁️
+                {% elif 'պարզ' in weather_text.lower() or 'արև' in weather_text.lower() or 'պարզ երկինք' in weather_text.lower() %}☀️
                 {% elif 'ձյուն' in weather_text.lower() %}❄️
+                {% elif 'ամպրոպ' in weather_text.lower() %}⛈️
                 {% else %}🌤️
                 {% endif %}
             </div>
@@ -168,8 +170,8 @@
                             <span>📅 {{ day.date }}</span>
                             <span style="color:#718096;">{{ day.condition }}</span>
                             <span>
-                                <span style="color:#e53e3e; font-weight:bold;">{{ day.max_temp }}°</span> / 
-                                <span style="color:#3182ce; font-weight:bold;">{{ day.min_temp }}°</span>
+                                <span style="color:#e53e3e; font-weight:bold;">Max: {{ day.max_temp }}°</span> / 
+                                <span style="color:#3182ce; font-weight:bold;">Min: {{ day.min_temp }}°</span>
                             </span>
                         </div>
                     {% endfor %}
@@ -181,6 +183,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // Կենտրոնացնում ենք Հայաստանի վրա
     var map = L.map('map').setView([40.1573, 44.5144], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
