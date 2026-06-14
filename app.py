@@ -5,7 +5,6 @@ import json
 import os
 
 app = Flask(__name__)
-# Ապահով սեսիաների գաղտնի բանալի
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_secure_session_key_2026')
 
 API_KEY = 'b7376e7399b3986a7ffc33eb6c34a6ef'
@@ -23,8 +22,8 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
-        # Մուտքի ճիշտ տվյալները
-        if username == "admin" and password == "12345":
+        # Փոխված է քո տվյալների համապատասխան
+        if username == "Narek" and password == "12345678":
             session['logged_in'] = True
             session['username'] = username
             return redirect(url_for('weather'))
@@ -41,7 +40,6 @@ def logout():
 
 @app.route('/weather', methods=['GET', 'POST'])
 def weather():
-    # Սեսիայի պաշտպանություն. եթե լոգին չի եղել, հետ է ուղարկում
     if 'logged_in' not in session:
         return redirect(url_for('login'))
 
@@ -59,7 +57,6 @@ def weather():
             url = None
             forecast_url = None
             
-            # Եթե հարցումը քարտեզի կոորդինատներ են
             if ',' in search_query:
                 try:
                     parts = search_query.split(',')
@@ -71,6 +68,50 @@ def weather():
                 except Exception:
                     error = "Բնակավայրը չգտնվեց"
             else:
-                # Տեքստային որոնում քաղաքի անունով
                 safe_city = urllib.parse.quote(search_query)
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
+                forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
+
+            if url and not error:
+                try:
+                    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                    with urllib.request.urlopen(req, timeout=10) as response:
+                        if response.status == 200:
+                            data = json.loads(response.read().decode())
+                            
+                            city_name = data.get('name', '').strip()
+                            if not city_name:
+                                city_name = "Հայտնաբերված վայր"
+                                
+                            temp = f"{round(data.get('main', {}).get('temp', 0))}"
+                            wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}"
+                            weather_text = data.get('weather', [{}])[0].get('description', '').capitalize()
+                            
+                            f_req = urllib.request.Request(forecast_url, headers={'User-Agent': 'Mozilla/5.0'})
+                            with urllib.request.urlopen(f_req, timeout=10) as f_response:
+                                if f_response.status == 200:
+                                    f_data = json.loads(f_response.read().decode())
+                                    for item in f_data.get('list', [])[::8]:
+                                        forecast.append({
+                                            'date': item.get('dt_txt', '').split(' ')[0],
+                                            'condition': item.get('weather', [{}])[0].get('description', '').capitalize(),
+                                            'max_temp': round(item.get('main', {}).get('temp_max', 0)),
+                                            'min_temp': round(item.get('main', {}).get('temp_min', 0))
+                                        })
+                        else:
+                            error = "Բնակավայրը չգտնվեց"
+                except Exception:
+                    error = "Բնակավայրը չգտնվեց"
+
+    return render_template(
+        'weather.html',
+        city_name=city_name,
+        temp=temp,
+        wind_speed=wind_speed,
+        weather_text=weather_text,
+        forecast=forecast,
+        error=error
+    )
+
+if __name__ == '__main__':
+    app.run(debug=True)
