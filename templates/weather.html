@@ -11,11 +11,29 @@
             background: linear-gradient(135deg, #74b9ff, #a29bfe);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             padding: 20px;
             transition: background 0.8s ease-in-out;
         }
+        /* 👤 Օգտատիրոջ պանել */
+        .user-panel {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            backdrop-filter: blur(5px);
+        }
+        .user-info { font-size: 16px; color: #2d3436; font-weight: 600; }
+        .logout-btn { color: #d63031; text-decoration: none; font-weight: bold; background: #fab1a0; padding: 6px 15px; border-radius: 20px; transition: background 0.2s; }
+        .logout-btn:hover { background: #ff7675; color: white; }
+
         .main-wrapper { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1100px; }
         .container { background: rgba(255, 255, 255, 0.92); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); flex: 1; text-align: center; height: fit-content; backdrop-filter: blur(5px); }
         .map-container { background: rgba(255, 255, 255, 0.92); padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); flex: 1.2; height: 600px; display: flex; flex-direction: column; backdrop-filter: blur(5px); }
@@ -36,205 +54,12 @@
         .temp { font-size: 64px; font-weight: bold; color: #0984e3; margin: 5px 0; }
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .detail-box { background: rgba(245, 246, 250, 0.85); padding: 12px; border-radius: 12px; font-size: 14px; color: #2d3436; text-align: left; border: 1px solid rgba(0,0,0,0.05); }
+        
+        /* 📜 Պատմության բաժին */
+        .history-section { margin-top: 20px; border-top: 2px solid #dfe6e9; padding-top: 15px; text-align: left; }
+        .history-title { font-size: 16px; color: #2d3436; font-weight: bold; margin-bottom: 10px; }
+        .history-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .history-item { background: #e17055; color: white; padding: 5px 12px; border-radius: 15px; font-size: 13px; cursor: pointer; font-weight: 500; transition: transform 0.2s; }
+        .history-item:hover { transform: scale(1.05); background: #f0932b; }
+
         .forecast-section { margin-top: 25px; border-top: 2px solid #dfe6e9; padding-top: 15px; }
-        .forecast-title { font-size: 18px; color: #2d3436; margin-bottom: 12px; text-align: left; font-weight: bold; }
-        .forecast-container { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-        .forecast-row { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .forecast-date { font-weight: 600; color: #636e72; font-size: 14px; }
-        .forecast-code { color: #2d3436; font-size: 14px; flex: 1; text-align: left; padding-left: 10px; }
-        .forecast-temp { font-weight: bold; color: #2d3436; font-size: 14px; }
-        .min-t { color: #b2bec3; font-weight: normal; margin-left: 6px; }
-        @media (max-width: 850px) { .main-wrapper { flex-direction: column-reverse; } .map-container { height: 400px; } }
-    </style>
-</head>
-<body>
-
-<div class="main-wrapper">
-    <div class="map-container">
-        <div class="map-title">🗺️ Սեղմիր քարտեզի ցանկացած կետի վրա՝ եղանակը տեսնելու համար</div>
-        <div id="map"></div>
-    </div>
-
-    <div class="container">
-        <h1>🌤️ Եղանակի Տեսություն</h1>
-        <div class="search-area">
-            <form class="search-form" id="searchForm" method="POST" action="/weather">
-                <input type="text" id="cityInput" name="city" placeholder="Գրեք քաղաքի անունը..." autocomplete="off" list="cities" required>
-                <datalist id="cities"></datalist>
-                <button type="submit">Փնտրել</button>
-            </form>
-            <button class="geo-btn" id="geoBtn" title="Իմ տեղադրությունը">🎯</button>
-        </div>
-
-        {% if error %}
-            <div class="error-msg">{{ error }}</div>
-        {% endif %}
-
-        <div class="weather-info">
-            <div class="city">🏙️ {{ city_name }}</div>
-            <div class="country">{{ country_name }}</div>
-            
-            <span id="mainIcon" class="main-status-icon">🌡️</span>
-            <div class="temp">{{ temp }}°C</div>
-            
-            <div class="details-grid">
-                <div class="detail-box">💨 Քամի: <b>{{ wind_speed }} կմ/ժ</b></div>
-                <div class="detail-box">📊 Վիճակ: <b id="weatherCondition">{{ weather_text }}</b></div>
-            </div>
-        </div>
-
-        {% if forecast %}
-        <div class="forecast-section">
-            <div class="forecast-title">📅 Մոտակա 5 օրերի կանխատեսում</div>
-            <div class="forecast-container">
-                {% for day in forecast %}
-                <div class="forecast-row">
-                    <div class="forecast-date">{{ day.date }}</div>
-                    <div class="forecast-code">
-                        <span class="forecast-icon" data-text="{{ day.condition }}">✨</span>
-                        {{ day.condition }}
-                    </div>
-                    <div class="forecast-temp">
-                        <span>{{ day.max_temp }}°</span>
-                        <span class="min-t">{{ day.min_temp }}°</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    // 🗺️ ՔԱՐՏԵԶԻ ՍԿԶԲՆԱԿԱՆԱՑՈՒՄԸ ՖԻՔՍՎԱԾ Է
-    const map = L.map('map').setView([40.1792, 44.5152], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-    function sendLocation(lat, lng) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/weather';
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'city';
-        input.value = lat + ',' + lng;
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    map.on('click', function(e) {
-        sendLocation(e.latlng.lat.toFixed(4), e.latlng.lng.toFixed(4));
-    });
-
-    document.getElementById('geoBtn').addEventListener('click', function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                sendLocation(position.coords.latitude.toFixed(4), position.coords.longitude.toFixed(4));
-            }, function() {
-                alert("Չհաջողվեց ստանալ տեղադրությունը։");
-            });
-        }
-    });
-
-    // 🎨 ՖՈՆԻ ԵՎ ՍՐԲԱՊԱՏԿԵՐՆԵՐԻ ԽԵԼԱՑԻ ՖՈՒՆԿՑԻԱՆ
-    function getWeatherStyle(conditionText) {
-        let bg = "linear-gradient(135deg, #74b9ff, #a29bfe)";
-        let icon = "🌤️";
-
-        if (conditionText.includes("պարզ") || conditionText.includes("արև")) {
-            bg = "linear-gradient(135deg, #fbc531, #74b9ff)";
-            icon = "☀️";
-        } else if (conditionText.includes("փոփոխական")) {
-            bg = "linear-gradient(135deg, #a29bfe, #74b9ff)";
-            icon = "⛅";
-        } else if (conditionText.includes("ամպ")) {
-            bg = "linear-gradient(135deg, #bdc3c7, #2c3e50)";
-            icon = "☁️";
-        } else if (conditionText.includes("անձրև") || conditionText.includes("մաղող") || conditionText.includes("տեղումներ")) {
-            bg = "linear-gradient(135deg, #616161, #9bc5c3)";
-            icon = "🌧️";
-        } else if (conditionText.includes("ձյուն") || conditionText.includes("կարկուտ")) {
-            bg = "linear-gradient(135deg, #eccc68, #ffffff, #74b9ff)";
-            icon = "🌨️";
-        } else if (conditionText.includes("ամպրոպ")) {
-            bg = "linear-gradient(135deg, #3d3d3d, #4b134f)";
-            icon = "⛈️";
-        } else if (conditionText.includes("մառախուղ")) {
-            bg = "linear-gradient(135deg, #dcdde1, #718093)";
-            icon = "🌫️";
-        }
-        return { bg: bg, icon: icon };
-    }
-
-    function applyWeatherVisuals() {
-        const conditionEl = document.getElementById('weatherCondition');
-        if (conditionEl) {
-            const mainCondition = conditionEl.innerText.toLowerCase();
-            const style = getWeatherStyle(mainCondition);
-            document.body.style.background = style.bg;
-            document.getElementById('mainIcon').innerText = style.icon;
-        }
-
-        document.querySelectorAll('.forecast-icon').forEach(el => {
-            const txt = el.getAttribute('data-text').toLowerCase();
-            el.innerText = getWeatherStyle(txt).icon;
-        });
-    }
-
-    // 🔍 AUTOCOMPLETE-Ի ԿԱՅՈՒՆԱՑՎԱԾ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ
-    const cityInput = document.getElementById('cityInput');
-    const citiesDatalist = document.getElementById('cities');
-    let searchCache = {};
-
-    cityInput.addEventListener('input', async function(e) {
-        const query = this.value.trim();
-        if (query.length < 3) {
-            citiesDatalist.innerHTML = "";
-            return;
-        }
-
-        // Եթե օգտատերը հենց նոր ընտրեց հուշումը, կանգնեցնում ենք կրկնակի հարցումը
-        if (searchCache[query]) return;
-
-        try {
-            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
-            const data = await res.json();
-            
-            citiesDatalist.innerHTML = "";
-            
-            if (data.results) {
-                data.results.forEach(city => {
-                    const option = document.createElement('option');
-                    // Քաղաքի մաքուր անունը
-                    option.value = city.name; 
-                    
-                    const country = city.country ? `, ${city.country}` : "";
-                    const admin1 = city.admin1 ? ` (${city.admin1})` : "";
-                    // Ցուցադրվող ամբողջական տեքստը տեղափոխում ենք տեքստային պարունակություն
-                    option.textContent = `${city.name}${country}${admin1}`;
-                    
-                    // Քեշավորում ենք, որպեսզի ընտրելիս սխալ չտա
-                    searchCache[city.name] = true;
-                    
-                    citiesDatalist.appendChild(option);
-                });
-            }
-        } catch (err) {
-            console.error("Geocoding error:", err);
-        }
-    });
-
-    // 🚀 ԷՋԸ ԲԱՑՎԵԼԻՍ ՔԱՐՏԵԶԻ ՉԱՓՍԵՐԻ ԹԱՐՄԱՑՈՒՄԸ
-    window.onload = function() {
-        applyWeatherVisuals();
-        // Սա թույլ կտա Leaflet-ին անմիջապես ճիշտ գծվել
-        setTimeout(function(){ 
-            map.invalidateSize(); 
-        }, 200);
-    };
-</script>
-</body>
-</html>
