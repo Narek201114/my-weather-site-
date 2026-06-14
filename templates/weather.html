@@ -20,7 +20,7 @@
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -74,7 +74,6 @@
         }
         .detail-item { font-size: 15px; color: #2d3436; }
         
-        /* 5 օրվա կանխատեսման ոճերը */
         .forecast-section {
             margin-top: 30px;
             border-top: 2px solid #dfe6e9;
@@ -102,7 +101,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .forecast-date { font-weight: 600; color: #636e72; min-width: 100px; text-align: left; }
-        .forecast-code { color: #0984e3; font-size: 14px; }
+        .forecast-code { color: #2d3436; font-size: 15px; flex: 1; text-align: left; padding-left: 20px; }
         .forecast-temp { font-weight: bold; color: #2d3436; text-align: right; min-width: 90px; }
         .min-t { color: #b2bec3; font-weight: normal; margin-left: 8px; }
     </style>
@@ -128,7 +127,7 @@
         
         <div class="details">
             <div class="detail-item">💨 Քամի: <b>{{ wind_speed }} կմ/ժ</b></div>
-            <div class="detail-item">📊 Կոդ: <b>{{ weather_code }}</b></div>
+            <div class="detail-item">📊 Վիճակ: <b>{{ weather_text }}</b></div>
         </div>
     </div>
 
@@ -139,7 +138,7 @@
             {% for day in forecast %}
             <div class="forecast-row">
                 <div class="forecast-date">{{ day.date }}</div>
-                <div class="forecast-code">🔮 Կոդ՝ {{ day.code }}</div>
+                <div class="forecast-code">{{ day.condition }}</div>
                 <div class="forecast-temp">
                     <span>{{ day.max_temp }}°</span>
                     <span class="min-t">{{ day.min_temp }}°</span>
