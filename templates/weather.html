@@ -32,11 +32,8 @@
         .weather-info { margin-bottom: 25px; }
         .city { font-size: 28px; font-weight: bold; color: #2d3436; }
         .country { font-size: 16px; color: #636e72; margin-bottom: 10px; }
-        
-        /* 🌟 Գլխավոր եղանակի սրբապատկերի մեծացում */
-        .main-status-icon { font-size: 50px; margin-top: 10px; display: block; }
+        .main-status-icon { font-size: 60px; margin: 10px 0; display: block; }
         .temp { font-size: 64px; font-weight: bold; color: #0984e3; margin: 5px 0; }
-        
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .detail-box { background: rgba(245, 246, 250, 0.85); padding: 12px; border-radius: 12px; font-size: 14px; color: #2d3436; text-align: left; border: 1px solid rgba(0,0,0,0.05); }
         .forecast-section { margin-top: 25px; border-top: 2px solid #dfe6e9; padding-top: 15px; }
@@ -44,9 +41,6 @@
         .forecast-container { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
         .forecast-row { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .forecast-date { font-weight: 600; color: #636e72; font-size: 14px; }
-        
-        /* 📅 Կանխատեսման տողի սրբապատկեր */
-        .forecast-icon-box { font-size: 20px; margin-right: 8px; display: inline-block; vertical-align: middle; }
         .forecast-code { color: #2d3436; font-size: 14px; flex: 1; text-align: left; padding-left: 10px; }
         .forecast-temp { font-weight: bold; color: #2d3436; font-size: 14px; }
         .min-t { color: #b2bec3; font-weight: normal; margin-left: 6px; }
@@ -114,6 +108,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // 🗺️ ՔԱՐՏԵԶԻ ՍԿԶԲՆԱԿԱՆԱՑՈՒՄԸ ՖԻՔՍՎԱԾ Է
     const map = L.map('map').setView([40.1792, 44.5152], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -144,4 +139,102 @@
         }
     });
 
-    // 🎨 ՖՈՆԻ ԵՎ ՍՐԲԱՊԱՏԿԵՐՆԵՐԻ (ICONS) 💡 ԽԵԼԱՑԻ Ֆ
+    // 🎨 ՖՈՆԻ ԵՎ ՍՐԲԱՊԱՏԿԵՐՆԵՐԻ ԽԵԼԱՑԻ ՖՈՒՆԿՑԻԱՆ
+    function getWeatherStyle(conditionText) {
+        let bg = "linear-gradient(135deg, #74b9ff, #a29bfe)";
+        let icon = "🌤️";
+
+        if (conditionText.includes("պարզ") || conditionText.includes("արև")) {
+            bg = "linear-gradient(135deg, #fbc531, #74b9ff)";
+            icon = "☀️";
+        } else if (conditionText.includes("փոփոխական")) {
+            bg = "linear-gradient(135deg, #a29bfe, #74b9ff)";
+            icon = "⛅";
+        } else if (conditionText.includes("ամպ")) {
+            bg = "linear-gradient(135deg, #bdc3c7, #2c3e50)";
+            icon = "☁️";
+        } else if (conditionText.includes("անձրև") || conditionText.includes("մաղող") || conditionText.includes("տեղումներ")) {
+            bg = "linear-gradient(135deg, #616161, #9bc5c3)";
+            icon = "🌧️";
+        } else if (conditionText.includes("ձյուն") || conditionText.includes("կարկուտ")) {
+            bg = "linear-gradient(135deg, #eccc68, #ffffff, #74b9ff)";
+            icon = "🌨️";
+        } else if (conditionText.includes("ամպրոպ")) {
+            bg = "linear-gradient(135deg, #3d3d3d, #4b134f)";
+            icon = "⛈️";
+        } else if (conditionText.includes("մառախուղ")) {
+            bg = "linear-gradient(135deg, #dcdde1, #718093)";
+            icon = "🌫️";
+        }
+        return { bg: bg, icon: icon };
+    }
+
+    function applyWeatherVisuals() {
+        const conditionEl = document.getElementById('weatherCondition');
+        if (conditionEl) {
+            const mainCondition = conditionEl.innerText.toLowerCase();
+            const style = getWeatherStyle(mainCondition);
+            document.body.style.background = style.bg;
+            document.getElementById('mainIcon').innerText = style.icon;
+        }
+
+        document.querySelectorAll('.forecast-icon').forEach(el => {
+            const txt = el.getAttribute('data-text').toLowerCase();
+            el.innerText = getWeatherStyle(txt).icon;
+        });
+    }
+
+    // 🔍 AUTOCOMPLETE-Ի ԿԱՅՈՒՆԱՑՎԱԾ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ
+    const cityInput = document.getElementById('cityInput');
+    const citiesDatalist = document.getElementById('cities');
+    let searchCache = {};
+
+    cityInput.addEventListener('input', async function(e) {
+        const query = this.value.trim();
+        if (query.length < 3) {
+            citiesDatalist.innerHTML = "";
+            return;
+        }
+
+        // Եթե օգտատերը հենց նոր ընտրեց հուշումը, կանգնեցնում ենք կրկնակի հարցումը
+        if (searchCache[query]) return;
+
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+            const data = await res.json();
+            
+            citiesDatalist.innerHTML = "";
+            
+            if (data.results) {
+                data.results.forEach(city => {
+                    const option = document.createElement('option');
+                    // Քաղաքի մաքուր անունը
+                    option.value = city.name; 
+                    
+                    const country = city.country ? `, ${city.country}` : "";
+                    const admin1 = city.admin1 ? ` (${city.admin1})` : "";
+                    // Ցուցադրվող ամբողջական տեքստը տեղափոխում ենք տեքստային պարունակություն
+                    option.textContent = `${city.name}${country}${admin1}`;
+                    
+                    // Քեշավորում ենք, որպեսզի ընտրելիս սխալ չտա
+                    searchCache[city.name] = true;
+                    
+                    citiesDatalist.appendChild(option);
+                });
+            }
+        } catch (err) {
+            console.error("Geocoding error:", err);
+        }
+    });
+
+    // 🚀 ԷՋԸ ԲԱՑՎԵԼԻՍ ՔԱՐՏԵԶԻ ՉԱՓՍԵՐԻ ԹԱՐՄԱՑՈՒՄԸ
+    window.onload = function() {
+        applyWeatherVisuals();
+        // Սա թույլ կտա Leaflet-ին անմիջապես ճիշտ գծվել
+        setTimeout(function(){ 
+            map.invalidateSize(); 
+        }, 200);
+    };
+</script>
+</body>
+</html>
