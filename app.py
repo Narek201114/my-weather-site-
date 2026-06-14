@@ -40,7 +40,7 @@ def translate_weather_code(code):
     return weather_mapping.get(code, "🔮 Անհայտ եղանակ")
 
 def get_coordinates(city_name):
-    # Ստուգում ենք՝ արդյոք մուտքագրվածը կոորդինատ է (պարունակում է ստորակետ)
+    # ՍՏՈՒԳՈՒՄ. Եթե տեքստի մեջ կա ստորակետ, ուրեմն քարտեզից եկած կոորդինատ է
     if "," in city_name:
         try:
             lat, lon = city_name.split(",")
@@ -53,7 +53,7 @@ def get_coordinates(city_name):
         except Exception:
             return None
 
-    # Եթե սովորական տեքստ է (քաղաքի անուն), դիմում ենք Geocoding API-ին
+    # Եթե սովորական տեքստ է, փնտրում ենք ըստ անունի
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=5&language=en&format=json"
     try:
         response = requests.get(geo_url, timeout=5)
@@ -82,7 +82,7 @@ def show_weather():
     
     if not geo_data:
         geo_data = get_coordinates("Yerevan")
-        error_message = f"'{city_query}' վայրը համակարգում չի գտնվել: Ցուցադրվում է Երևանը:"
+        error_message = f"'{city_query}' վայրը չի գտնվել: Ցուցադրվում է Երևանը:"
 
     weather_url = "https://api.open-meteo.com/v1/forecast"
     params = {
