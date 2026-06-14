@@ -22,8 +22,8 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
-        # Փոխված է քո տվյալների համապատասխան
-        if username == "Narek" and password == "12345678":
+        # Քո ճիշտ տվյալները՝ հաշվի առնելով Narek2011. գաղտնաբառը
+        if username == "Narek" and password == "Narek2011.":
             session['logged_in'] = True
             session['username'] = username
             return redirect(url_for('weather'))
