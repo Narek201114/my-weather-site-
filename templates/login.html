@@ -2,23 +2,65 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Մուտք | Եղանակի Տեսություն</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        h2 { color: #333; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #a29bfe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 320px;
+            text-align: center;
+        }
+        h2 { color: #2d3436; margin-bottom: 25px; font-size: 28px; }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #0984e3; outline: none; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #000000; transform: translateY(-2px); }
+        .back-link { display: block; margin-top: 20px; color: #636e72; text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #0984e3; }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2>Մուտք</h2>
+    <div class="login-container">
+        <h2>Մուտք գործել</h2>
         <form action="/login" method="POST">
             <input type="text" name="username" placeholder="Օգտանուն" required>
             <input type="password" name="password" placeholder="Գաղտնաբառ" required>
-            <button type="submit">Մուտք գործել</button>
+            <button type="submit">Մուտք</button>
         </form>
+        <a href="/" class="back-link">← Վերադառնալ Գլխավոր</a>
     </div>
 </body>
 </html>
