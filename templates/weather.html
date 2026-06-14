@@ -14,6 +14,7 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        /* Նախնական ֆոնը՝ անցումային էֆեկտով */
         body {
             background: linear-gradient(135deg, #74b9ff, #a29bfe);
             min-height: 100vh;
@@ -21,7 +22,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            transition: background 0.5s ease;
+            transition: background 0.8s ease-in-out;
         }
         .main-wrapper {
             display: flex;
@@ -31,16 +32,17 @@
             max-width: 1100px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.92);
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             flex: 1;
             text-align: center;
             height: fit-content;
+            backdrop-filter: blur(5px);
         }
         .map-container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.92);
             padding: 15px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -48,6 +50,7 @@
             height: 600px;
             display: flex;
             flex-direction: column;
+            backdrop-filter: blur(5px);
         }
         #map {
             width: 100%;
@@ -119,7 +122,6 @@
         .country { font-size: 16px; color: #636e72; margin-bottom: 10px; }
         .temp { font-size: 64px; font-weight: bold; color: #0984e3; margin: 5px 0; }
         
-        /* Չորս տվյալների գեղեցիկ ցանց */
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -127,12 +129,13 @@
             margin-top: 15px;
         }
         .detail-box {
-            background: #f5f6fa;
+            background: rgba(245, 246, 250, 0.85);
             padding: 12px;
             border-radius: 12px;
             font-size: 14px;
             color: #2d3436;
             text-align: left;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .forecast-section {
@@ -198,83 +201,9 @@
         {% endif %}
 
         <div class="weather-info">
-            <div class="city" id="currentCity">🏙️ {{ city_name }}</div>
+            <div class="city">🏙️ {{ city_name }}</div>
             <div class="country">{{ country_name }}</div>
             <div class="temp">{{ temp }}°C</div>
             
             <div class="details-grid">
-                <div class="detail-box">💨 Քամի: <b>{{ wind_speed }} կմ/ժ</b></div>
-                <div class="detail-box">📊 Վիճակ: <b>{{ weather_text }}</b></div>
-                <div class="detail-box">💧 Խոնավություն: <b>{{ humidity }}%</b></div>
-                <div class="detail-box">☀️ ՈւՎ Ինդեքս: <b>{{ uv_index }}</b></div>
-            </div>
-        </div>
-
-        {% if forecast %}
-        <div class="forecast-section">
-            <div class="forecast-title">📅 Մոտակա 5 օրերի կանխատեսում</div>
-            <div class="forecast-container">
-                {% for day in forecast %}
-                <div class="forecast-row">
-                    <div class="forecast-date">{{ day.date }}</div>
-                    <div class="forecast-code">{{ day.condition }}</div>
-                    <div class="forecast-temp">
-                        <span>{{ day.max_temp }}°</span>
-                        <span class="min-t">{{ day.min_temp }}°</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    const map = L.map('map').setView([40.1792, 44.5152], 7);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Ֆունկցիա՝ տվյալները սերվերին ուղարկելու համար
-    def sendLocation(lat, lng) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/weather';
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'city';
-        input.value = lat + ',' + lng;
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // Քարտեզին սեղմելիս
-    map.on('click', function(e) {
-        sendLocation(e.latlng.lat.toFixed(4), e.latlng.lng.toFixed(4));
-    });
-
-    // 🎯 GPS ԼՈԿԱՑԻԱՅԻ ԿՈՃԱԿԻ ԱՇԽԱՏԱՆՔԸ
-    document.getElementById('geoBtn').addEventListener('click', function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const lat = position.coords.latitude.toFixed(4);
-                const lng = position.coords.longitude.toFixed(4);
-                sendLocation(lat, lng);
-            }, function() {
-                alert("Չհաջողվեց ստանալ Ձեր տեղադրությունը։ Ստուգեք բրաուզերի թույլտվությունները։");
-            });
-        } else {
-            alert("Ձեր բրաուզերը չի աջակցում Geolocation ֆունկցիան։");
-        }
-    });
-
-    setTimeout(function(){ map.invalidateSize(); }, 400);
-</script>
-
-</body>
-</html>
+                <div class="detail-
