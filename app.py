@@ -5,7 +5,7 @@ import json
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_secure_pure_2026')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_perfect_final_2026')
 
 API_KEY = 'b7376e7399b3986a7ffc33eb6c34a6ef'
 
@@ -21,6 +21,7 @@ def login():
 
 @app.route('/weather', methods=['GET', 'POST'])
 def weather():
+    # Սկզբնական լռելյայն արժեքներ
     city_name = "Ընտրեք քաղաք"
     temp = "--"
     wind_speed = "0"
@@ -31,23 +32,31 @@ def weather():
     if request.method == 'POST':
         search_query = request.form.get('city', '').strip()
         
-        # ՖԻՔՍ: Եթե հարցումը դատարկ է, կամ պատահական եկել է հենց "Ընտրեք քաղաք" տեքստը, API-ին հարցում չենք անում
+        # ԽԻՍՏ ՍՏՈՒԳՈՒՄ: Եթե հարցումը դատարկ է, կամ JS-ը ուղարկել է լռելյայն տեքստը, API-ին ընդհանրապես չենք դիմում
         if search_query and search_query != "" and search_query != "Ընտրեք քաղաք":
             url = None
             forecast_url = None
             
+            # Ստուգում ենք՝ արդյո՞ք քարտեզի կոորդինատներ են
             if ',' in search_query:
                 try:
-                    lat, lon = search_query.split(',')
-                    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat.strip()}&lon={lon.strip()}&appid={API_KEY}&units=metric&lang=am"
-                    forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat.strip()}&lon={lon.strip()}&appid={API_KEY}&units=metric&lang=am"
+                    parts = search_query.split(',')
+                    if len(parts) == 2 and parts[0].strip() and parts[1].strip():
+                        lat = parts[0].strip()
+                        lon = parts[1].strip()
+                        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
+                        forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
+                    else:
+                        error = "Կոորդինատների անվավեր ձևաչափ։"
                 except Exception:
-                    error = "Կոորդինատների սխալ։"
+                    error = "Կոորդինատների մշակման սխալ։"
             else:
+                # Տեքստային որոնում քաղաքի անունով
                 safe_city = urllib.parse.quote(search_query)
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
                 forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
 
+            # Եթե հասցեն ճիշտ է ձևավորվել և ներքին սխալ չկա, կատարում ենք հարցումը
             if url and not error:
                 try:
                     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -55,15 +64,18 @@ def weather():
                         if response.status == 200:
                             data = json.loads(response.read().decode())
                             
-                            city_name = data.get('name', 'Հայտնաբերված վայր')
-                            if not city_name:
-                                city_name = "Անհայտ բնակավայր"
+                            # Ստանում ենք բնակավայրի իրական անունը
+                            fetched_name = data.get('name', '').strip()
+                            if fetched_name:
+                                city_name = fetched_name
+                            else:
+                                city_name = "Հայտնաբերված վայր"
                                 
                             temp = f"{round(data.get('main', {}).get('temp', 0))}"
                             wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}"
                             weather_text = data.get('weather', [{}])[0].get('description', '').capitalize()
                             
-                            # 5 օրվա կանխատեսում
+                            # 5 օրվա կանխատեսումների աղյուսակի լրացում
                             f_req = urllib.request.Request(forecast_url, headers={'User-Agent': 'Mozilla/5.0'})
                             with urllib.request.urlopen(f_req, timeout=10) as f_response:
                                 if f_response.status == 200:
@@ -78,7 +90,8 @@ def weather():
                         else:
                             error = "Բնակավայրը չգտնվեց:"
                 except Exception:
-                    error = "Վայրը չգտնվեց կամ API-ի սխալ է:"
+                    # Որպեսզի քարտեզի վրայի պատահական դատարկ կետերը չկոտրեն էջը
+                    error = "Բնակավայրը չգտնվեց:"
 
     return render_template(
         'weather.html',
