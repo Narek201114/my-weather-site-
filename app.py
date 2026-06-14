@@ -3,24 +3,27 @@ from pymongo import MongoClient
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super_secret_key_weather_site')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'my_secret_key_123')
 
-# MongoDB Միացում
+# MongoDB միացում
 mongo_uri = os.environ.get('MONGO_URI')
 client = MongoClient(mongo_uri)
 db = client.weather_db
 
+# 1. Կայք մտնելիս միանգամից բացվում է լոգինի էջը
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('login.html')
 
+# 2. Երբ սեղմում են «Մուտք», այս ֆունկցիան ավտոմատ տեղափոխում է եղանակի էջ
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Երբ սեղմում են մուտք, այն տանում է դեպի /weather
+        # Օգտատերը սեղմեց մուտքի կոճակը -> տանում ենք իրական էջ
         return redirect(url_for('weather'))
     return render_template('login.html')
 
+# 3. Սա քո սարքած էջն է՝ քարտեզով ու բոլոր ֆունկցիաներով
 @app.route('/weather')
 def weather():
     return render_template('weather.html')
