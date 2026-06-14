@@ -1,62 +1,83 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import urllib.request
 import urllib.parse
 import json
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_perfect_final_2026')
+# Գաղտնի բանալի սեսիաների պաշտպանության համար
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_secure_session_key_2026')
 
 API_KEY = 'b7376e7399b3986a7ffc33eb6c34a6ef'
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('login.html')
+    # Եթե արդեն մուտք է գործել, ուղարկում ենք եղանակի էջ
+    if 'logged_in' in session:
+        return redirect(url_for('weather'))
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
-        return redirect(url_for('weather'))
-    return render_template('login.html')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Պարզեցված մուտքի ստուգում (կարող ես փոխել ըստ քո ցանկության)
+        if username == "admin" and password == "12345":
+            session['logged_in'] = True
+            session['username'] = username
+            return redirect(url_for('weather'))
+        else:
+            error = "⚠️ Սխալ օգտանուն կամ գաղտնաբառ։"
+            
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    # Ջնջում ենք սեսիան ապահով դուրս գալու համար
+    session.pop('logged_in', None)
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 @app.route('/weather', methods=['GET', 'POST'])
 def weather():
-    # Սկզբնական լռելյայն արժեքներ
+    # Սեսիայի պաշտպանություն. եթե լոգին չի եղել, թույլ չենք տալիս մտնել
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+
     city_name = "Ընտրեք քաղաք"
     temp = "--"
     wind_speed = "0"
-    weather_text = "Սպասում է ընտրության"
+    weather_text = "Սպասում է որոնման"
     forecast = []
     error = None
 
     if request.method == 'POST':
         search_query = request.form.get('city', '').strip()
         
-        # ԽԻՍՏ ՍՏՈՒԳՈՒՄ: Եթե հարցումը դատարկ է, կամ JS-ը ուղարկել է լռելյայն տեքստը, API-ին ընդհանրապես չենք դիմում
-        if search_query and search_query != "" and search_query != "Ընտրեք քաղաք":
+        if search_query and search_query != "Ընտրեք քաղաք":
             url = None
             forecast_url = None
             
-            # Ստուգում ենք՝ արդյո՞ք քարտեզի կոորդինատներ են
+            # Ստուգում ենք՝ արդյո՞ք քարտեզից եկած կոորդինատներ են
             if ',' in search_query:
                 try:
                     parts = search_query.split(',')
-                    if len(parts) == 2 and parts[0].strip() and parts[1].strip():
+                    if len(parts) == 2:
                         lat = parts[0].strip()
                         lon = parts[1].strip()
                         url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
                         forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
-                    else:
-                        error = "Կոորդինատների անվավեր ձևաչափ։"
                 except Exception:
-                    error = "Կոորդինատների մշակման սխալ։"
+                    error = "Բնակավայրը չգտնվեց"
             else:
                 # Տեքստային որոնում քաղաքի անունով
                 safe_city = urllib.parse.quote(search_query)
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
                 forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={safe_city}&appid={API_KEY}&units=metric&lang=am"
 
-            # Եթե հասցեն ճիշտ է ձևավորվել և ներքին սխալ չկա, կատարում ենք հարցումը
             if url and not error:
                 try:
                     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -64,18 +85,17 @@ def weather():
                         if response.status == 200:
                             data = json.loads(response.read().decode())
                             
-                            # Ստանում ենք բնակավայրի իրական անունը
-                            fetched_name = data.get('name', '').strip()
-                            if fetched_name:
-                                city_name = fetched_name
-                            else:
+                            # Քաղաքի անուն կամ ավտոմատ անվանում
+                            city_name = data.get('name', '').strip()
+                            if not city_name:
                                 city_name = "Հայտնաբերված վայր"
                                 
                             temp = f"{round(data.get('main', {}).get('temp', 0))}"
+                            # մ/վ-ն վերածում ենք կմ/ժ-ի
                             wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}"
                             weather_text = data.get('weather', [{}])[0].get('description', '').capitalize()
                             
-                            # 5 օրվա կանխատեսումների աղյուսակի լրացում
+                            # 5 օրվա կանխատեսում
                             f_req = urllib.request.Request(forecast_url, headers={'User-Agent': 'Mozilla/5.0'})
                             with urllib.request.urlopen(f_req, timeout=10) as f_response:
                                 if f_response.status == 200:
@@ -88,10 +108,10 @@ def weather():
                                             'min_temp': round(item.get('main', {}).get('temp_min', 0))
                                         })
                         else:
-                            error = "Բնակավայրը չգտնվեց:"
+                            error = "Բնակավայրը չգտնվեց"
                 except Exception:
-                    # Որպեսզի քարտեզի վրայի պատահական դատարկ կետերը չկոտրեն էջը
-                    error = "Բնակավայրը չգտնվեց:"
+                    # Պաշտպանություն API-ի crash-երից (Սխալների կառավարում)
+                    error = "Բնակավայրը չգտնվեց"
 
     return render_template(
         'weather.html',
