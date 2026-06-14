@@ -3,10 +3,9 @@ from pymongo import MongoClient
 import os
 
 app = Flask(__name__)
-# Օգտագործում ենք Render-ի Environment-ում սահմանված գաղտնի բանալին
-app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'mysecretkey')
 
-# Միացում MongoDB-ին՝ օգտագործելով MONGO_URI-ն
+# MongoDB կապ
 client = MongoClient(os.environ.get('MONGO_URI'))
 db = client.weather_db
 
@@ -14,8 +13,11 @@ db = client.weather_db
 def index():
     return render_template('index.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        # Այստեղ կավելացնես մուտքի տրամաբանությունը
+        return "Մուտքի հարցումը ստացվել է"
     return render_template('login.html')
 
 @app.route('/weather')
