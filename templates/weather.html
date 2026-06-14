@@ -51,8 +51,10 @@
         #map {
             width: 100%;
             height: 100%;
+            min-height: 500px; /* Ստիպում ենք քարտեզին բացվել */
             border-radius: 12px;
             border: 1px solid #dfe6e9;
+            z-index: 1;
         }
         .map-title {
             font-size: 16px;
@@ -140,7 +142,6 @@
         .forecast-temp { font-weight: bold; color: #2d3436; text-align: right; min-width: 80px; font-size: 14px; }
         .min-t { color: #b2bec3; font-weight: normal; margin-left: 8px; }
 
-        /* Էկրանի հարմարեցում հեռախոսների համար */
         @media (max-width: 850px) {
             .main-wrapper {
                 flex-direction: column-reverse;
@@ -204,23 +205,34 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // 1. Ստեղծում ենք քարտեզը և կենտրոնացնում Հայաստանի վրա (Երևանի կոորդինատներով)
+    // Կենտրոնացնում ենք Հայաստանի վրա
     const map = L.map('map').setView([40.1792, 44.5152], 7);
 
-    // 2. Ավելացնում ենք OpenStreetMap-ի սիրուն շերտը (Layers)
+    // ՈՒՂՂՎԱԾ ՏՈՂԸ (Ավելացվել է https)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 3. Ֆունկցիա, որը կատարվում է քարտեզի վրա սեղմելիս
     function onMapClick(e) {
         const lat = e.latlng.lat.toFixed(4);
         const lng = e.latlng.lng.toFixed(4);
 
-        // Քարտեզի վրա դնում ենք ժամանակավոր նշան (Marker)
         L.marker([lat, lng]).addTo(map)
-            .bindPopup("Որոնվում է եղանակը...")
+            .bindPopup("Որոնվում է...")
             .openOn(map);
 
-        // Ուղարկում ենք կոորդինատները մեր Python սերվերին որպես տեքստ (օրինակ՝ "40.1792,44.5152
+        const cityInput = document.getElementById('cityInput');
+        cityInput.value = `${lat},${lng}`;
+        
+        document.getElementById('searchForm').submit();
+    }
+
+    map.on('click', onMapClick);
+
+    // Սա ստիպում է քարտեզին ճիշտ վերահաշվարկել իր չափսերը էջի բացվելիս
+    setTimeout(function(){ map.invalidateSize(); }, 400);
+</script>
+
+</body>
+</html>
