@@ -6,147 +6,150 @@
     <title>Եղանակի Տեսություն</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
+            background: linear-gradient(135deg, #74b9ff, #a29bfe);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #333;
+            padding: 20px;
         }
-        .weather-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            padding: 35px;
-            width: 380px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 600px;
             text-align: center;
-            color: #fff;
         }
+        h1 { color: #2d3436; margin-bottom: 20px; }
         .search-form {
             display: flex;
-            gap: 10px;
             margin-bottom: 25px;
         }
-        .search-input {
+        .search-form input {
             flex: 1;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-        }
-        .search-input::placeholder {
-            color: #ddd;
-        }
-        .search-btn {
             padding: 12px 20px;
+            border: 2px solid #dfe6e9;
+            border-radius: 30px 0 0 30px;
+            outline: none;
+            font-size: 16px;
+        }
+        .search-form button {
+            padding: 12px 25px;
             border: none;
-            border-radius: 12px;
-            background: #e94560;
-            color: #fff;
-            font-weight: bold;
+            background: #0984e3;
+            color: white;
+            border-radius: 0 30px 30px 0;
             cursor: pointer;
-            transition: 0.3s;
+            font-size: 16px;
+            transition: background 0.2s;
         }
-        .search-btn:hover {
-            background: #ff647c;
-        }
-        .location {
-            font-size: 2.2rem;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-        .country {
-            font-size: 1.1rem;
-            color: #bfa3ff;
+        .search-form button:hover { background: #0275d8; }
+        .error-msg {
+            background: #ff8196;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            font-size: 14px;
         }
-        .temperature {
-            font-size: 5rem;
-            font-weight: bold;
-            margin: 15px 0;
-            display: inline-block;
-            position: relative;
+        .weather-info { margin-bottom: 30px; }
+        .city { font-size: 28px; font-weight: bold; color: #2d3436; }
+        .country { font-size: 16px; color: #636e72; margin-bottom: 15px; }
+        .temp { font-size: 64px; font-weight: bold; color: #0984e3; margin: 10px 0; }
+        .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            background: #f5f6fa;
+            padding: 15px;
+            border-radius: 12px;
         }
-        .unit {
-            font-size: 1.8rem;
-            position: absolute;
-            top: 10px;
-            right: -30px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        .detail-item { font-size: 15px; color: #2d3436; }
+        
+        /* 5 օրվա կանխատեսման ոճերը */
+        .forecast-section {
+            margin-top: 30px;
+            border-top: 2px solid #dfe6e9;
             padding-top: 20px;
         }
-        .info-item {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 12px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .info-label {
-            font-size: 0.85rem;
-            color: #ccc;
-            margin-bottom: 5px;
-        }
-        .info-value {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        .error-msg {
-            color: #ff6b6b;
+        .forecast-title {
+            font-size: 18px;
+            color: #2d3436;
             margin-bottom: 15px;
-            font-size: 0.95rem;
+            text-align: left;
+            font-weight: bold;
         }
+        .forecast-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .forecast-date { font-weight: 600; color: #636e72; min-width: 100px; text-align: left; }
+        .forecast-code { color: #0984e3; font-size: 14px; }
+        .forecast-temp { font-weight: bold; color: #2d3436; text-align: right; min-width: 90px; }
+        .min-t { color: #b2bec3; font-weight: normal; margin-left: 8px; }
     </style>
 </head>
 <body>
 
-    <div class="weather-card">
-        <form class="search-form" action="/weather" method="POST">
-            <input type="text" name="city" class="search-input" placeholder="Մուտքագրեք քաղաքը (անգլերեն)..." required>
-            <button type="submit" class="search-btn">Որոնել</button>
-        </form>
+<div class="container">
+    <h1>🌤️ Եղանակի Տեսություն</h1>
+    
+    <form class="search-form" method="POST" action="/weather">
+        <input type="text" name="city" placeholder="Գրեք քաղաքի անունը..." required>
+        <button type="submit">Փնտրել</button>
+    </form>
 
-        {% if error %}
-            <div class="error-msg">{{ error }}</div>
-        {% endif %}
+    {% if error %}
+        <div class="error-msg">{{ error }}</div>
+    {% endif %}
 
-        <div class="location">{{ city_name }}</div>
+    <div class="weather-info">
+        <div class="city">🏙️ {{ city_name }}</div>
         <div class="country">{{ country_name }}</div>
+        <div class="temp">{{ temp }}°C</div>
         
-        <div>
-            <div class="temperature">
-                {{ temp }}<span class="unit">°C</span>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">Քամու արագություն</div>
-                <div class="info-value">{{ wind_speed }} կմ/ժ</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Եղանակի կոդ</div>
-                <div class="info-value">#{{ weather_code }}</div>
-            </div>
+        <div class="details">
+            <div class="detail-item">💨 Քամի: <b>{{ wind_speed }} կմ/ժ</b></div>
+            <div class="detail-item">📊 Կոդ: <b>{{ weather_code }}</b></div>
         </div>
     </div>
+
+    {% if forecast %}
+    <div class="forecast-section">
+        <div class="forecast-title">📅 Մոտակա 5 օրերի կանխատեսում</div>
+        <div class="forecast-container">
+            {% for day in forecast %}
+            <div class="forecast-row">
+                <div class="forecast-date">{{ day.date }}</div>
+                <div class="forecast-code">🔮 Կոդ՝ {{ day.code }}</div>
+                <div class="forecast-temp">
+                    <span>{{ day.max_temp }}°</span>
+                    <span class="min-t">{{ day.min_temp }}°</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
 
 </body>
 </html>
