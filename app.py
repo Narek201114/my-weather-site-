@@ -12,6 +12,34 @@ ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
 if not os.path.exists(IMAGE_FOLDER):
     os.makedirs(IMAGE_FOLDER)
 
+# Ֆունկցիա՝ Open-Meteo-ի կոդերը հայերեն տեքստի և էմոջիների վերածելու համար
+def translate_weather_code(code):
+    weather_mapping = {
+        0: "☀️ Պարզ երկինք",
+        1: "🌤️ Մեծ մասամբ պարզ",
+        2: "⛅ Փոփոխական ամպամածություն",
+        3: "☁️ Ամպամած",
+        45: "🌫️ Մառախուղ",
+        48: "🌫️ Սառցե մառախուղ",
+        51: "🌧️ Թույլ մաղող անձրև",
+        53: "🌧️ Մաղող անձրև",
+        55: "🌧️ Ուժեղ մաղող անձրև",
+        61: "🌧️ Թույլ անձրև",
+        63: "🌧️ Անձրև",
+        65: " Intense անձրև",
+        71: "🌨️ Թույլ ձյուն",
+        73: "🌨️ Ձյուն",
+        75: "🌨️ Ուժեղ ձյուն",
+        77: "🌨️ Կարկուտ",
+        80: "🌦️ Թույլ անձրևային տեղումներ",
+        81: "🌦️ Անձրևային տեղումներ",
+        82: "⛈️ Ուժեղ տեղումներ",
+        95: "⛈️ Ամպրոպ",
+        96: "⛈️ Ամպրոպ և թույլ կարկուտ",
+        99: "⛈️ Ամպրոպ և ուժեղ կարկուտ"
+    }
+    return weather_mapping.get(code, "🔮 Անհայտ եղանակ")
+
 def get_coordinates(city_name):
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=5&language=en&format=json"
     try:
@@ -43,7 +71,6 @@ def show_weather():
         geo_data = get_coordinates("Yerevan")
         error_message = f"'{city_query}' քաղաքը համակարգում չի գտնվել: Ցուցադրվում է Երևանը:"
 
-    # Ավելացրել ենք daily պարամետրը 7 օրվա համար (որից կվերցնենք 5-ը)
     weather_url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": geo_data["lat"],
@@ -58,17 +85,18 @@ def show_weather():
         data = response.json()
         current = data["current_weather"]
         
-        # Պատրաստում ենք 5 օրվա կանխատեսման տվյալները
         forecast_days = []
         if "daily" in data:
             daily_data = data["daily"]
-            # Վերցնում ենք 1-ից մինչև 6-րդ օրերը (այսինքն՝ այսօրվանից հետո մոտակա 5 օրը)
             for i in range(1, 6):
+                # Թարգմանում ենք կոդը հայերենի
+                weather_text = translate_weather_code(daily_data["weathercode"][i])
+                
                 forecast_days.append({
                     "date": daily_data["time"][i],
                     "max_temp": daily_data["temperature_2m_max"][i],
                     "min_temp": daily_data["temperature_2m_min"][i],
-                    "code": daily_data["weathercode"][i]
+                    "condition": weather_text  # Ուղարկում ենք արդեն պատրաստի տեքստը
                 })
         
         return render_template(
@@ -77,8 +105,8 @@ def show_weather():
             country_name=geo_data["country"],
             temp=current['temperature'], 
             wind_speed=current['windspeed'],
-            weather_code=current['weathercode'],
-            forecast=forecast_days,  # Ուղարկում ենք HTML-ին
+            weather_text=translate_weather_code(current['weathercode']), # Գլխավոր եղանակն էլ թարգմանենք
+            forecast=forecast_days,
             error=error_message
         )
     except Exception as e:
