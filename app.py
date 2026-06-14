@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'weather_secret_key_2026')
 
-# Քո OpenWeather API բանալին
+# OpenWeather API-ի բանալին
 API_KEY = 'b7376e7399b3986a7ffc33eb6c34a6ef'
 
 @app.route('/')
@@ -20,9 +20,8 @@ def login():
 
 @app.route('/weather', methods=['GET', 'POST'])
 def weather():
-    # Սկզբնական արժեքներ՝ սխալներից խուսափելու համար
+    # Սկզբնական լռելյայն արժեքներ
     city_name = "Ընտրեք քաղաք"
-    country_name = ""
     temp = "--"
     wind_speed = "0"
     weather_text = "Սպասում է ընտրության"
@@ -33,50 +32,56 @@ def weather():
         search_query = request.form.get('city', '').strip()
         
         if search_query:
-            # Քարտեզից եկած կոորդինատների մշակում
+            # Եթե հարցումը եկել է քարտեզից (լայնություն, երկարություն)
             if ',' in search_query:
                 try:
                     lat, lon = search_query.split(',')
-                    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
-                    forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=am"
+                    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat.strip()}&lon={lon.strip()}&appid={API_KEY}&units=metric&lang=am"
+                    forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat.strip()}&lon={lon.strip()}&appid={API_KEY}&units=metric&lang=am"
                 except ValueError:
                     error = "Կոորդինատների սխալ ձևաչափ։"
             else:
-                # Քաղաքի անունով որոնում
+                # Եթե հարցումը սովորական տեքստային որոնում է
                 url = f"https://api.openweathermap.org/data/2.5/weather?q={search_query}&appid={API_KEY}&units=metric&lang=am"
                 forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={search_query}&appid={API_KEY}&units=metric&lang=am"
 
             if not error:
                 try:
+                    # 1. Ընթացիկ եղանակի և բնակավայրի անվան հարցում
                     res = requests.get(url, timeout=10)
                     if res.status_code == 200:
                         data = res.json()
-                        city_name = data.get('name', 'Անհայտ')
-                        country_name = data.get('sys', {}).get('country', '')
-                        temp = round(data.get('main', {}).get('temp', 0))
-                        wind_speed = round(data.get('wind', {}).get('speed', 0) * 3.6)
+                        
+                        # Վերցնում ենք API-ի գտած իրական բնակավայրի անունը
+                        city_name = data.get('name', 'Անհայտ բնակավայր')
+                        
+                        # Եթե API-ն անուն չի տվել (օրինակ՝ բաց դաշտ է), թողնում ենք կոորդինատները
+                        if not city_name or city_name == "":
+                            city_name = f"Կետ քարտեզի վրա ({search_query})"
+
+                        temp = f"{round(data.get('main', {}).get('temp', 0))}"
+                        wind_speed = f"{round(data.get('wind', {}).get('speed', 0) * 3.6)}" # մ/վ -> կմ/ժ
                         weather_text = data.get('weather', [{}])[0].get('description', '').capitalize()
                         
-                        # 5 օրվա կանխատեսման մշակում
+                        # 2. 5 օրվա կանխատեսման հարցում
                         f_res = requests.get(forecast_url, timeout=10)
                         if f_res.status_code == 200:
                             f_data = f_res.json()
                             for item in f_data.get('list', [])[::8]:
                                 forecast.append({
                                     'date': item.get('dt_txt', '').split(' ')[0],
-                                    'condition': item.get('weather', [{}])[0].get('description', ''),
+                                    'condition': item.get('weather', [{}])[0].get('description', '').capitalize(),
                                     'max_temp': round(item.get('main', {}).get('temp_max', 0)),
                                     'min_temp': round(item.get('main', {}).get('temp_min', 0))
                                 })
                     else:
-                        error = "Վայրը չգտնվեց։"
+                        error = "Բնակավայրը չգտնվեց։"
                 except Exception:
-                    error = "Միացման սխալ։"
+                    error = "Միացման սխալ API-ի հետ։"
 
     return render_template(
         'weather.html',
         city_name=city_name,
-        country_name=country_name,
         temp=temp,
         wind_speed=wind_speed,
         weather_text=weather_text,
