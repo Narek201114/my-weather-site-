@@ -3,14 +3,12 @@ import requests
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
-# Մաքուր և ստանդարտ Flask: Այն ավտոմատ կգտնի քո templates պապկան
 app = Flask(__name__)
 CORS(app)
 
 IMAGE_FOLDER = "images"
 ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
 
-# Ստեղծում ենք images պապկան, եթե չկա
 if not os.path.exists(IMAGE_FOLDER):
     os.makedirs(IMAGE_FOLDER)
 
@@ -45,17 +43,33 @@ def show_weather():
         geo_data = get_coordinates("Yerevan")
         error_message = f"'{city_query}' քաղաքը համակարգում չի գտնվել: Ցուցադրվում է Երևանը:"
 
+    # Ավելացրել ենք daily պարամետրը 7 օրվա համար (որից կվերցնենք 5-ը)
     weather_url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current_weather": True
+        "current_weather": True,
+        "daily": "temperature_2m_max,temperature_2m_min,weathercode",
+        "timezone": "auto"
     }
     
     try:
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
         current = data["current_weather"]
+        
+        # Պատրաստում ենք 5 օրվա կանխատեսման տվյալները
+        forecast_days = []
+        if "daily" in data:
+            daily_data = data["daily"]
+            # Վերցնում ենք 1-ից մինչև 6-րդ օրերը (այսինքն՝ այսօրվանից հետո մոտակա 5 օրը)
+            for i in range(1, 6):
+                forecast_days.append({
+                    "date": daily_data["time"][i],
+                    "max_temp": daily_data["temperature_2m_max"][i],
+                    "min_temp": daily_data["temperature_2m_min"][i],
+                    "code": daily_data["weathercode"][i]
+                })
         
         return render_template(
             'weather.html',
@@ -64,6 +78,7 @@ def show_weather():
             temp=current['temperature'], 
             wind_speed=current['windspeed'],
             weather_code=current['weathercode'],
+            forecast=forecast_days,  # Ուղարկում ենք HTML-ին
             error=error_message
         )
     except Exception as e:
