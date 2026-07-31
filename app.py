@@ -70,6 +70,7 @@ def get_coordinates(city_name):
         print(f"Geocoding error: {e}")
     return None
 
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/weather', methods=['GET', 'POST'])
 def show_weather():
     city_query = "Yerevan"
@@ -87,7 +88,7 @@ def show_weather():
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current_weather": True,
+        "hourly": "temperature_2m,relative_humidity_2m,windspeed_10m,weathercode",
         "daily": "temperature_2m_max,temperature_2m_min,weathercode",
         "timezone": "auto"
     }
@@ -95,7 +96,11 @@ def show_weather():
     try:
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
-        current = data["current_weather"]
+        
+        hourly = data["hourly"]
+        current_temp = hourly["temperature_2m"][0]
+        current_wind = hourly["windspeed_10m"][0]
+        current_code = hourly["weathercode"][0]
         
         forecast_days = []
         if "daily" in data:
@@ -113,9 +118,9 @@ def show_weather():
             'weather.html',
             city_name=geo_data["name"],
             country_name=geo_data["country"],
-            temp=current['temperature'], 
-            wind_speed=current['windspeed'],
-            weather_text=translate_weather_code(current['weathercode']),
+            temp=current_temp, 
+            wind_speed=current_wind,
+            weather_text=translate_weather_code(current_code),
             forecast=forecast_days,
             error=error_message
         )
