@@ -108,7 +108,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // 🗺️ ՔԱՐՏԵԶԻ ՍԿԶԲՆԱԿԱՆԱՑՈՒՄԸ
     const map = L.map('map').setView([40.1792, 44.5152], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -139,7 +138,6 @@
         }
     });
 
-    // 🎨 ՖՈՆԻ ԵՎ ՍՐԲԱՊԱՏԿԵՐՆԵՐԻ ԽԵԼԱՑԻ ՖՈՒՆԿՑԻԱՆ
     function getWeatherStyle(conditionText) {
         let bg = "linear-gradient(135deg, #74b9ff, #a29bfe)";
         let icon = "🌤️";
@@ -184,7 +182,6 @@
         });
     }
 
-    // 🔍 AUTOCOMPLETE-Ի ՇՏԿՎԱԾ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆ
     const cityInput = document.getElementById('cityInput');
     const citiesDatalist = document.getElementById('cities');
     let searchCache = {};
@@ -210,7 +207,6 @@
                     const country = city.country ? `, ${city.country}` : "";
                     const admin1 = city.admin1 ? ` (${city.admin1})` : "";
                     
-                    // Ճշգրտում. Value-ն դարձնում ենք ամբողջական, որ սերվերը հստակ իմանա կոնկրետ քաղաքը
                     const fullName = `${city.name}${country}`;
                     option.value = fullName; 
                     option.textContent = `${city.name}${country}${admin1}`;
@@ -224,7 +220,6 @@
         }
     });
 
-    // 🚀 ԷՋԸ ԲԱՑՎԵԼԻՍ ՔԱՐՏԵԶԻ ՉԱՓՍԵՐԻ ԹԱՐՄԱՑՈՒՄԸ
     window.onload = function() {
         applyWeatherVisuals();
         setTimeout(function(){ 
