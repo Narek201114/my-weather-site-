@@ -87,7 +87,7 @@ def show_weather():
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code",
+        "current_weather": True,
         "daily": "temperature_2m_max,temperature_2m_min,weathercode",
         "timezone": "auto"
     }
@@ -95,7 +95,7 @@ def show_weather():
     try:
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
-        current = data["current"]
+        current = data["current_weather"]
         
         forecast_days = []
         if "daily" in data:
@@ -113,9 +113,9 @@ def show_weather():
             'weather.html',
             city_name=geo_data["name"],
             country_name=geo_data["country"],
-            temp=current['temperature_2m'], 
-            wind_speed=current['wind_speed_10m'],
-            weather_text=translate_weather_code(current['weather_code']),
+            temp=current['temperature'], 
+            wind_speed=current['windspeed'],
+            weather_text=translate_weather_code(current['weathercode']),
             forecast=forecast_days,
             error=error_message
         )
