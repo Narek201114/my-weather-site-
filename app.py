@@ -36,10 +36,15 @@ def translate_weather_code(code):
     return weather_mapping.get(code, "🔮 Անհայտ եղանակ")
 
 def get_coordinates(city_name):
+    if not city_name:
+        return {"lat": 40.1792, "lon": 44.5152, "name": "Yerevan", "country": "Armenia"}
+
     if "," in city_name:
         try:
-            lat, lon = city_name.split(",")
-            return {"lat": float(lat.strip()), "lon": float(lon.strip()), "name": f"📍 Կետ քարտեզի վրա", "country": "Ընտրված վայր"}
+            parts = city_name.split(",")
+            lat = float(parts[0].strip())
+            lon = float(parts[1].strip())
+            return {"lat": lat, "lon": lon, "name": f"📍 Կետ քարտեզի վրա", "country": "Ընտրված վայր"}
         except Exception as e:
             print(f"Lat/Lon parse error: {e}")
 
@@ -53,7 +58,6 @@ def get_coordinates(city_name):
     except Exception as e:
         print(f"Geocoding error: {e}")
     
-    # Եթե չգտնվի, վերադարձնել Երևանը հաստատ
     return {"lat": 40.1792, "lon": 44.5152, "name": "Yerevan", "country": "Armenia"}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -69,7 +73,7 @@ def show_weather():
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current_weather": True,
+        "current_weather": "true",
         "daily": "temperature_2m_max,temperature_2m_min,weathercode",
         "timezone": "auto"
     }
@@ -78,11 +82,9 @@ def show_weather():
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
         
-        print("API Response:", data) # Սա կտպվի տերմինալում (Logs)
-
         current = data.get("current_weather", {})
-        temp = current.get('temperature', 'N/A')
-        wind_speed = current.get('windspeed', 'N/A')
+        temp = current.get('temperature', 0)
+        wind_speed = current.get('windspeed', 0)
         weather_code = current.get('weathercode', 0)
         weather_text = translate_weather_code(weather_code)
 
