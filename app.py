@@ -39,50 +39,31 @@ def get_coordinates(city_name):
     if "," in city_name:
         try:
             lat, lon = city_name.split(",")
-            lat = lat.strip()
-            lon = lon.strip()
-            
-            reverse_url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&accept-language=hy,en"
-            headers = {'User-Agent': 'MyWeatherApp/1.0'}
-            
-            response = requests.get(reverse_url, headers=headers, timeout=5)
-            if response.status_code == 200:
-                geo_data = response.json()
-                address = geo_data.get("address", {})
-                place_name = address.get("village") or address.get("town") or address.get("city") or address.get("suburb") or address.get("county")
-                country = address.get("country", "Unknown")
-                
-                if place_name:
-                    return {"lat": float(lat), "lon": float(lon), "name": f"📍 {place_name}", "country": country}
-            
-            return {"lat": float(lat), "lon": float(lon), "name": f"📍 Կետ քարտեզի վրա ({lat}, {lon})", "country": "Ընտրված վայր"}
+            return {"lat": float(lat.strip()), "lon": float(lon.strip()), "name": f"📍 Կետ քարտեզի վրա", "country": "Ընտրված վայր"}
         except Exception as e:
-            print(f"Reverse error: {e}")
-            return None
+            print(f"Lat/Lon parse error: {e}")
 
-    geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=5&language=en&format=json"
+    geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1&language=en&format=json"
     try:
         response = requests.get(geo_url, timeout=5)
-        if response.status_code == 200 and "results" in response.json():
-            result = response.json()["results"][0]
+        data = response.json()
+        if response.status_code == 200 and "results" in data and len(data["results"]) > 0:
+            result = data["results"][0]
             return {"lat": result["latitude"], "lon": result["longitude"], "name": result["name"], "country": result.get("country", "Unknown")}
     except Exception as e:
         print(f"Geocoding error: {e}")
-    return None
+    
+    # Եթե չգտնվի, վերադարձնել Երևանը հաստատ
+    return {"lat": 40.1792, "lon": 44.5152, "name": "Yerevan", "country": "Armenia"}
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/weather', methods=['GET', 'POST'])
 def show_weather():
     city_query = "Yerevan"
-    error_message = None
-
     if request.method == 'POST':
         city_query = request.form.get('city', 'Yerevan').strip()
 
     geo_data = get_coordinates(city_query)
-    if not geo_data:
-        geo_data = get_coordinates("Yerevan")
-        error_message = f"'{city_query}' վայրը չի գտնվել: Ցուցադրվում է Երևանը:"
 
     weather_url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -97,32 +78,41 @@ def show_weather():
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
         
-        current = data.get("current_weather", {"temperature": 0, "windspeed": 0, "weathercode": 0})
-        
+        print("API Response:", data) # Սա կտպվի տերմինալում (Logs)
+
+        current = data.get("current_weather", {})
+        temp = current.get('temperature', 'N/A')
+        wind_speed = current.get('windspeed', 'N/A')
+        weather_code = current.get('weathercode', 0)
+        weather_text = translate_weather_code(weather_code)
+
         forecast_days = []
-        if "daily" in data:
-            daily_data = data["daily"]
-            for i in range(1, 6):
-                weather_text = translate_weather_code(daily_data["weathercode"][i])
-                forecast_days.append({
-                    "date": daily_data["time"][i],
-                    "max_temp": daily_data["temperature_2m_max"][i],
-                    "min_temp": daily_data["temperature_2m_min"][i],
-                    "condition": weather_text
-                })
+        daily_data = data.get("daily", {})
+        times = daily_data.get("time", [])
+        max_temps = daily_data.get("temperature_2m_max", [])
+        min_temps = daily_data.get("temperature_2m_min", [])
+        codes = daily_data.get("weathercode", [])
+
+        for i in range(1, min(6, len(times))):
+            forecast_days.append({
+                "date": times[i],
+                "max_temp": max_temps[i],
+                "min_temp": min_temps[i],
+                "condition": translate_weather_code(codes[i])
+            })
         
         return render_template(
             'weather.html',
             city_name=geo_data["name"],
             country_name=geo_data["country"],
-            temp=current.get('temperature', 0), 
-            wind_speed=current.get('windspeed', 0),
-            weather_text=translate_weather_code(current.get('weathercode', 0)),
+            temp=temp, 
+            wind_speed=wind_speed,
+            weather_text=weather_text,
             forecast=forecast_days,
-            error=error_message
+            error=None
         )
     except Exception as e:
-        return f"Սխալ տվյալներ ստանալիս: {e}", 500
+        return f"Կրիտիկական սխալ: {e}", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
