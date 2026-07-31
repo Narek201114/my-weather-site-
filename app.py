@@ -33,7 +33,10 @@ def translate_weather_code(code):
         96: "⛈️ Ամպրոպ և թույլ կարկուտ",
         99: "⛈️ Ամպրոպ և ուժեղ կարկուտ"
     }
-    return weather_mapping.get(int(code) if code is not None else 0, "🔮 Անհայտ եղանակ")
+    try:
+        return weather_mapping.get(int(code), "🔮 Անհայտ եղանակ")
+    except:
+        return "🔮 Անհայտ եղանակ"
 
 def get_coordinates(city_name):
     if not city_name:
@@ -73,7 +76,7 @@ def show_weather():
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current": "temperature_2m,windspeed_10m,weathercode",
+        "hourly": "temperature_2m,windspeed_10m,weathercode",
         "daily": "temperature_2m_max,temperature_2m_min,weathercode",
         "timezone": "auto"
     }
@@ -82,11 +85,15 @@ def show_weather():
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
         
-        # Այստեղ ստուգում ենք 'current'-ը, քանի որ Open-Meteo-ն հիմա անցել է 'current' ստանդարտին
-        current = data.get("current", {})
-        temp = current.get('temperature_2m', 0)
-        wind_speed = current.get('windspeed_10m', 0)
-        weather_code = current.get('weathercode', 0)
+        # Վերցնում ենք ժամային տվյալների առաջին տարրը (հենց այս պահի ճշգրիտ ջերմաստիճանը)
+        hourly = data.get("hourly", {})
+        temps = hourly.get("temperature_2m", [0])
+        winds = hourly.get("windspeed_10m", [0])
+        codes = hourly.get("weathercode", [0])
+
+        temp = temps[0] if temps else 0
+        wind_speed = winds[0] if winds else 0
+        weather_code = codes[0] if codes else 0
         weather_text = translate_weather_code(weather_code)
 
         forecast_days = []
@@ -94,14 +101,14 @@ def show_weather():
         times = daily_data.get("time", [])
         max_temps = daily_data.get("temperature_2m_max", [])
         min_temps = daily_data.get("temperature_2m_min", [])
-        codes = daily_data.get("weathercode", [])
+        daily_codes = daily_data.get("weathercode", [])
 
         for i in range(1, min(6, len(times))):
             forecast_days.append({
                 "date": times[i],
                 "max_temp": max_temps[i],
                 "min_temp": min_temps[i],
-                "condition": translate_weather_code(codes[i])
+                "condition": translate_weather_code(daily_codes[i])
             })
         
         return render_template(
