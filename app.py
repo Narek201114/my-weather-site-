@@ -33,7 +33,7 @@ def translate_weather_code(code):
         96: "⛈️ Ամպրոպ և թույլ կարկուտ",
         99: "⛈️ Ամպրոպ և ուժեղ կարկուտ"
     }
-    return weather_mapping.get(code, "🔮 Անհայտ եղանակ")
+    return weather_mapping.get(int(code) if code is not None else 0, "🔮 Անհայտ եղանակ")
 
 def get_coordinates(city_name):
     if not city_name:
@@ -73,7 +73,7 @@ def show_weather():
     params = {
         "latitude": geo_data["lat"],
         "longitude": geo_data["lon"],
-        "current_weather": "true",
+        "current": "temperature_2m,windspeed_10m,weathercode",
         "daily": "temperature_2m_max,temperature_2m_min,weathercode",
         "timezone": "auto"
     }
@@ -82,9 +82,10 @@ def show_weather():
         response = requests.get(weather_url, params=params, timeout=5)
         data = response.json()
         
-        current = data.get("current_weather", {})
-        temp = current.get('temperature', 0)
-        wind_speed = current.get('windspeed', 0)
+        # Այստեղ ստուգում ենք 'current'-ը, քանի որ Open-Meteo-ն հիմա անցել է 'current' ստանդարտին
+        current = data.get("current", {})
+        temp = current.get('temperature_2m', 0)
+        wind_speed = current.get('windspeed_10m', 0)
         weather_code = current.get('weathercode', 0)
         weather_text = translate_weather_code(weather_code)
 
