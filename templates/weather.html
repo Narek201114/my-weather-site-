@@ -108,7 +108,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // 🗺️ ՔԱՐՏԵԶԻ ՍԿԶԲՆԱԿԱՆԱՑՈՒՄԸ ՖԻՔՍՎԱԾ Է
+    // 🗺️ ՔԱՐՏԵԶԻ ՍԿԶԲՆԱԿԱՆԱՑՈՒՄԸ
     const map = L.map('map').setView([40.1792, 44.5152], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -184,19 +184,18 @@
         });
     }
 
-    // 🔍 AUTOCOMPLETE-Ի ԿԱՅՈՒՆԱՑՎԱԾ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ
+    // 🔍 AUTOCOMPLETE-Ի ՇՏԿՎԱԾ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆ
     const cityInput = document.getElementById('cityInput');
     const citiesDatalist = document.getElementById('cities');
     let searchCache = {};
 
-    cityInput.addEventListener('input', async function(e) {
+    cityInput.addEventListener('input', async function() {
         const query = this.value.trim();
         if (query.length < 3) {
             citiesDatalist.innerHTML = "";
             return;
         }
 
-        // Եթե օգտատերը հենց նոր ընտրեց հուշումը, կանգնեցնում ենք կրկնակի հարցումը
         if (searchCache[query]) return;
 
         try {
@@ -208,17 +207,15 @@
             if (data.results) {
                 data.results.forEach(city => {
                     const option = document.createElement('option');
-                    // Քաղաքի մաքուր անունը
-                    option.value = city.name; 
-                    
                     const country = city.country ? `, ${city.country}` : "";
                     const admin1 = city.admin1 ? ` (${city.admin1})` : "";
-                    // Ցուցադրվող ամբողջական տեքստը տեղափոխում ենք տեքստային պարունակություն
+                    
+                    // Ճշգրտում. Value-ն դարձնում ենք ամբողջական, որ սերվերը հստակ իմանա կոնկրետ քաղաքը
+                    const fullName = `${city.name}${country}`;
+                    option.value = fullName; 
                     option.textContent = `${city.name}${country}${admin1}`;
                     
-                    // Քեշավորում ենք, որպեսզի ընտրելիս սխալ չտա
-                    searchCache[city.name] = true;
-                    
+                    searchCache[fullName] = true;
                     citiesDatalist.appendChild(option);
                 });
             }
@@ -230,7 +227,6 @@
     // 🚀 ԷՋԸ ԲԱՑՎԵԼԻՍ ՔԱՐՏԵԶԻ ՉԱՓՍԵՐԻ ԹԱՐՄԱՑՈՒՄԸ
     window.onload = function() {
         applyWeatherVisuals();
-        // Սա թույլ կտա Leaflet-ին անմիջապես ճիշտ գծվել
         setTimeout(function(){ 
             map.invalidateSize(); 
         }, 200);
